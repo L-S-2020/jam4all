@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Suchergebnisse</title>
+</head>
+<body>
+    <h1>Suchergebnisse</h1>
+    {% if tracks %}
+        <ul>
+            {% for track in tracks %}
+                <li>
+                    <strong>{{ track.name }}</strong> von {% for artist in track.artists %}{{ artist.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                    <form method="POST" action="/api/add_queue">
+                        {% csrf_token %}
+                        <input type="hidden" name="jam_code" value="{{ jam_code }}">
+                        <input type="hidden" name="track_id" value="{{ track.id }}">
+                        <button type="submit">Zur Warteschlange hinzufügen</button>
+                    </form>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Keine Ergebnisse gefunden.</p>
+    {% endif %}
+    <a href="/home">Zurück zur Startseite</a>
+</body>
+</html>

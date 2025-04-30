@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Jam Details</title>
+</head>
+<body>
+    <h1>{{ jam_name }}</h1>
+    <p><strong>Code:</strong> {{ jam_code }}</p>
+    <p><strong>Description:</strong> {{ jam_description }}</p>
+    <p><strong>Status:</strong> {{ active }}</p>
+    <h2>Queue</h2>
+    <p>{{ queue }}</p>
+
+    {% if owner %}
+        <h3>Owner Options</h3>
+        <form method="POST" action="/jam/{{ jam_name }}/deactivate">
+            {% csrf_token %}
+            <button type="submit">Deactivate Jam</button>
+        </form>
+    {% endif %}
+
+    <a href="/home">Back to Home</a>
+
+    <h2>Add Song</h2>
+    <form method="POST" action="/search">
+        {% csrf_token %}
+        <label for="query">Search:</label><br>
+        <input type="text" id="query" name="query" required><br><br>
+        <input type="hidden" name="jam_code" value="{{ jam_code }}">
+        <button type="submit">Search</button>
+</body>
+</html>

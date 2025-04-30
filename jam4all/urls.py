@@ -23,4 +23,10 @@ urlpatterns = [
     path('', views.start_auth_spotify, name='start_auth_spotify'),
     path('login', views.login_spotify, name='login_spotify'),
     path('callback', views.callback_spotify, name='callback_spotify'),
+    path('home', views.home, name='home'),
+    path('api/create_jam', views.create_jam, name='create_jam'),
+    path('jam/<str:jam_code>', views.jam_details, name='jam_details'),
+    path('join', views.join_jam, name='join_jam'),
+    path('search', views.search_song, name='search_song'),
+    path('api/add_queue', views.add_song_to_queue, name='add_song_to_queue'),
 ]

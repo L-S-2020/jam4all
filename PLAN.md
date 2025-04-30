@@ -2,13 +2,17 @@ Idea: Let people without the spotify app join spotify jams
 
 # Plan
 1. [x] integrate Spotify oauth
-2. [] create jam
-3. [] song search via spotify web api
-4. [] adding songs to que
-5. [] control spotify playback
-6. [] add settings
-7. [] make the ui nice
-8. [] ship v1
+2. [x] create jam
+3. [x] jam details page
+4. [x] join jam
+5. [x] song search via spotify web api
+6. [x] adding songs to que
+7. [] display queue
+8. [] control spotify playback
+9. [] add settings
+10. [] make the ui nice
+11. [] comply with Spotify's TOS
+12. [] ship v1
 
 # Flow
 1. User authenticates with Spotify
