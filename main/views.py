@@ -114,9 +114,8 @@ def callback_spotify(request):
 
 def logout(request):
     # Clear the session
-    if request.method == "POST":
-        request.session.flush()
-        return redirect('/')
+    request.session.flush()
+    return redirect('/')
 
 def home(request):
     if "user_id" not in request.session:
@@ -129,7 +128,7 @@ def home(request):
     jams = Jam.objects.filter(user=user)
     current = spotify_get_current_playback(user)
     active = jams.filter(is_active=True).first()
-    if active is not None:
+    if active is not None and current is not None:
         current["jam_code"] = active.code
     else:
         active = False
