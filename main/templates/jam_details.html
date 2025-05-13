@@ -1,33 +1,93 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Jam Details</title>
-</head>
-<body>
-    <h1>{{ jam_name }}</h1>
-    <p><strong>Code:</strong> {{ jam_code }}</p>
-    <p><strong>Description:</strong> {{ jam_description }}</p>
-    <p><strong>Status:</strong> {{ active }}</p>
-    <h2>Queue</h2>
-    <p>{{ queue }}</p>
+{% extends "header.html" %}
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Jam Details Card -->
+        <div class="col-md-6">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">{{ jam_name }}</h5>
+                    <p><strong>Code:</strong> {{ jam_code }}</p>
+                    <p><strong>Status:</strong> {{ active|yesno:"Active,Inactive" }}</p>
+                    {% if owner %}
+                        <h6>Owner Options</h6>
+                        <form method="POST" action="/api/deactivate">
+                            {% csrf_token %}
+                            <input type="hidden" name="jam_code" value="{{ jam_code }}">
+                            <button type="submit" class="btn btn-danger btn-sm">Deactivate Jam</button>
+                        </form>
+                    {% endif %}
+                    <a href="/home" class="btn btn-secondary btn-sm mt-3">Back to Home</a>
+                </div>
+            </div>
+        </div>
 
-    {% if owner %}
-        <h3>Owner Options</h3>
-        <form method="POST" action="/jam/{{ jam_name }}/deactivate">
-            {% csrf_token %}
-            <button type="submit">Deactivate Jam</button>
-        </form>
-    {% endif %}
+        <!-- Current Playing Card -->
+        <div class="col-md-6">
+            {% if current %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Currently Playing</h5>
+                    <img src="{{ current.item.album.images.0.url }}" alt="Cover" class="img-fluid mb-3" style="max-height: 200px;">
+                    <p><strong>{{ current.item.name }}</strong></p>
+                    <p>by {{ current.item.artists }}</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
 
-    <a href="/home">Back to Home</a>
+    <!-- Queue Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Queue</h5>
+                    {% if queue %}
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Title</th>
+                                <th>Artist</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for track in queue %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ track.name }}</td>
+                                <td>{{ track.artists }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <p>No songs in the queue.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <h2>Add Song</h2>
-    <form method="POST" action="/search">
-        {% csrf_token %}
-        <label for="query">Search:</label><br>
-        <input type="text" id="query" name="query" required><br><br>
-        <input type="hidden" name="jam_code" value="{{ jam_code }}">
-        <button type="submit">Search</button>
-</body>
-</html>
+    <!-- Add Song Form -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Add Song</h5>
+                    <form method="POST" action="/search">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="query" class="form-label">Search:</label>
+                            <input type="text" id="query" name="query" class="form-control" required>
+                        </div>
+                        <input type="hidden" name="jam_code" value="{{ jam_code }}">
+                        <button type="submit" class="btn btn-primary">Search</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

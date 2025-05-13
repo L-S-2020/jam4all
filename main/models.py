@@ -13,11 +13,11 @@ class User(models.Model):
     spotify_token_expires = models.IntegerField()
 
 class Jam(models.Model):
-    code = models.CharField(max_length=8, unique=True)
+    id = models.AutoField(primary_key=True)
+    code = models.CharField(max_length=8)
     user = models.ForeignKey(User, on_delete=models.CASCADE,)
-    jam_name = models.CharField(max_length=255)
-    jam_description = models.TextField(default="")
     created_at = models.DateTimeField(auto_now_add=True)
+    jam_name = models.CharField(max_length=255, default="")
     is_active = models.BooleanField(default=True)
     queue = models.TextField()
     last_queue_update = models.DateTimeField(auto_now=True)

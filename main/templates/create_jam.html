@@ -1,15 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Create Jam</title>
-</head>
-<body>
+{% extends "header.html" %}
+
+{% block content %}
     <h1>Create a New Jam</h1>
     <form method="POST">
         {% csrf_token %}
         <label for="jam_name">Jam Name:</label><br>
-        <input type="text" id="jam_name" name="jam_name"><br><br>
+        <input type="text" id="jam_name" name="jam_name" required><br><br>
 
         <label for="jam_description">Jam Description:</label><br>
         <textarea id="jam_description" name="jam_description" rows="4"></textarea><br><br>
@@ -21,5 +17,4 @@
     </form>
     <br>
     <a href="/home">Back to Home</a>
-</body>
-</html>
+{% endblock %}

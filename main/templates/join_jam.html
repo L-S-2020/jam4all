@@ -1,18 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Join Jam</title>
-</head>
-<body>
-    <h1>Join a Jam</h1>
+{% extends "header.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Einem Jam beitreten</h1>
     <form method="POST" action="/join">
         {% csrf_token %}
-        <label for="jam_code">Enter Jam Code:</label><br>
-        <input type="text" id="jam_code" name="jam_code" required><br><br>
-        <button type="submit">Join Jam</button>
+        <div class="mb-3">
+            <label for="jam_code" class="form-label">Jam-Code eingeben:</label>
+            <input type="text" id="jam_code" name="jam_code" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Beitreten</button>
     </form>
-    <br>
-    <a href="/home">Back to Home</a>
-</body>
-</html>
+</div>
+{% endblock %}

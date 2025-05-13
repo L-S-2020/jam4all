@@ -47,7 +47,7 @@ def spotify_add_to_queue(track_id, jam):
     # Add the track to the queue
     sp.add_to_queue(track_id)
     # Update the jam's queue
-    jam.queue.append(track_id)
+    jam.queue += f"{track_id},"
 
 def spotify_get_playback(jam):
     # Get the current queue for the jam
@@ -67,16 +67,18 @@ def spotify_get_current_playback(user):
     current_playback = sp.current_playback()
     return current_playback
 
-def start_auth_spotify(request):
+def landingpage(request):
     # Check if user is logged in
     if "user_id" in request.session:
         return redirect("/home")
 
     # If not logged in, redirect to Spotify login
-    return redirect('/login')
+    return render(request, 'landingpage.html')
 
 
 def login_spotify(request):
+    if "user_id" in request.session:
+        return redirect("/home")
     # Redirect user to Spotify authorization URL
     auth_url = spotify_oauth.get_authorize_url()
     return redirect(auth_url)
@@ -106,28 +108,41 @@ def callback_spotify(request):
     user.save()
 
     request.session["user_id"] = user_id
+    request.session["spotify_username"] = user_info["display_name"]
 
     return redirect('/home')
 
+def logout(request):
+    # Clear the session
+    if request.method == "POST":
+        request.session.flush()
+        return redirect('/')
+
 def home(request):
-    # Check if user is logged in
     if "user_id" not in request.session:
         return redirect('/login')
 
-    # Get user info from session
     user_id = request.session["user_id"]
     user = User.objects.get(spotify_id=user_id)
     user_name = user.spotify_username
-    print(user_name)
 
-    # Get user's jams from the database
     jams = Jam.objects.filter(user=user)
     current = spotify_get_current_playback(user)
-    # Render the home page with user info and jams
+    active = jams.filter(is_active=True).first()
+    if active is not None:
+        current["jam_code"] = active.code
+    else:
+        active = False
+
+    # Bereite die Künstlernamen vor
+    if current and "item" in current:
+        current["item"]["artists"] = ", ".join(artist["name"] for artist in current["item"]["artists"])
+
     return render(request, 'home.html', {
         'user_name': user_name,
         'jams': jams,
         'current': current,
+        'active': active,
     })
 
 def create_jam(request):
@@ -140,10 +155,6 @@ def create_jam(request):
         user_id = request.session["user_id"]
         user = User.objects.get(spotify_id=user_id)
 
-        jam_name = request.POST.get("jam_name")
-        jam_description = request.POST.get("jam_description")
-        expires_at = request.POST.get("expires_at")
-
         new_code = os.urandom(4).hex()
         # Check if the code is unique
         while Jam.objects.filter(code=new_code).exists():
@@ -155,14 +166,12 @@ def create_jam(request):
         new_jam = Jam(
             code = new_code,
             user=user,
-            jam_name=jam_name,
-            jam_description=jam_description,
         )
         new_jam.save()
 
         print("New jam created:", new_jam.name())
 
-    return redirect('/home')
+    return redirect('/jam/' + new_code)
 
 def join_jam(request):
     if request.method == "POST":
@@ -174,12 +183,12 @@ def join_jam(request):
     return render(request, 'join_jam.html')
 
 def jam_details(request, jam_code):
-    # Check if jam exists
+    # Überprüfen, ob der Jam existiert
     jam = Jam.objects.filter(code=jam_code).first()
     if jam is None:
         return HttpResponse("Jam not found", status=404)
 
-    # Check if jam belongs to the user
+    # Überprüfen, ob der Jam dem Benutzer gehört
     owner = False
     user_id = request.session.get("user_id")
     if user_id is not None:
@@ -187,19 +196,32 @@ def jam_details(request, jam_code):
         if jam.user == user:
             owner = True
 
-    # Get jam details
+    # Hole die aktuellen Wiedergabedaten und die Warteschlange
+    queue, current = spotify_get_playback(jam)
+
+    # Verarbeite die Warteschlange
+    formatted_queue = []
+    for track in queue["queue"]:
+        formatted_queue.append({
+            "name": track["name"],
+            "artists": ", ".join(artist["name"] for artist in track["artists"])
+        })
+
+    # Verarbeite die aktuellen Wiedergabedaten
+    if current and "item" in current:
+        current["item"]["artists"] = ", ".join(artist["name"] for artist in current["item"]["artists"])
+
+    # Jam-Details
     jam_name = jam.name()
-    jam_description = jam.jam_description
     jam_code = jam.code
-    queue = jam.queue
     active = jam.is_active
 
-    # Render jam details page
+    # Render die `jam_details.html`
     return render(request, 'jam_details.html', {
         'jam_name': jam_name,
-        'jam_description': jam_description,
         'jam_code': jam_code,
-        'queue': queue,
+        'queue': formatted_queue,
+        'current': current,
         'active': active,
         'owner': owner
     })
@@ -215,7 +237,7 @@ def search_song(request):
             return HttpResponse("Jam not found", status=400)
         query = request.POST.get("query")
         sp = spotipy.Spotify(auth_manager=spotify_client_auth)
-        results = sp.search(q=query, type='track', limit=10, market=jam.market)
+        results = sp.search(q=query, type='track', limit=15, market=jam.market)
         tracks = results['tracks']['items']
         return render(request, 'search_results.html', {'tracks': tracks, 'jam_code': jam_code})
     return HttpResponse("Invalid request", status=400)
@@ -234,4 +256,24 @@ def add_song_to_queue(request):
         spotify_add_to_queue(track_id, jam)
 
         return redirect('/jam/' + jam_code)
+    return HttpResponse("Invalid request", status=400)
+
+def deactivate_jam(request):
+    if request.method == "POST":
+        jam_code = request.POST.get("jam_code")
+        # Check if jam is valid
+        jam = Jam.objects.filter(code=jam_code).first()
+        if jam is None:
+            return HttpResponse("Jam not found", status=404)
+        # Check if user is the owner
+        user_id = request.session.get("user_id")
+        if user_id is None:
+            return HttpResponse("User not found", status=404)
+        user = User.objects.get(spotify_id=user_id)
+        if jam.user != user:
+            return HttpResponse("You are not the owner of this jam", status=403)
+        # Deactivate the jam
+        jam.is_active = False
+        jam.save()
+        return redirect('/home')
     return HttpResponse("Invalid request", status=400)

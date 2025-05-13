@@ -1,40 +1,80 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Home</title>
-</head>
-<body>
-    User: {{ user_name }}<br>
-    Jams: <br>
-    {% for jam in jams %}
-        {{ jam.name }}<br>
-    {% endfor %}
+{% extends "header.html" %}
+{% block content %}
+<div class="container mt-5">
+    <div class="text-center">
+        <h1 class="mb-4">Willkommen, {{ user_name }}!</h1>
+    </div>
 
-    <h1>Create a New Jam</h1>
-    <form method="POST" action="/api/create_jam">
-        {% csrf_token %}
-        <label for="jam_name">Jam Name:</label><br>
-        <input type="text" id="jam_name" name="jam_name"><br><br>
+    {% if current %}
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title">Aktuell läuft:</h5>
+            <p class="card-text">
+                <strong>{{ current.item.name }}</strong> von
+                {{ current.item.artists}}
+            </p>
+            {% if active != False %}
+            <a href="/jam/{{ current.jam_code }}" class="btn btn-success">
+                Jam ansehen
+            </a>
+            {% else %}
+            <form method="POST" action="/api/create_jam">
+                        {% csrf_token %}
+                <button type="submit" class="btn btn-primary">Jam erstellen</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
 
-        <label for="jam_description">Jam Description:</label><br>
-        <textarea id="jam_description" name="jam_description" rows="4"></textarea><br><br>
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Neuen Jam erstellen</h5>
+                    <p class="card-text">Erstelle einen neuen Jam und lade Freunde ein, um gemeinsam Musik zu hören.</p>
+                    <form method="POST" action="/api/create_jam">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary">Jam erstellen</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Bestehenden Jam beitreten</h5>
+                    <p class="card-text">Gib den Code eines bestehenden Jams ein, um beizutreten.</p>
+                    <form method="POST" action="/join">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <input type="text" id="jam_code" name="jam_code" class="form-control" placeholder="Jam-Code" required>
+                        </div>
+                        <button type="submit" class="btn btn-success">Beitreten</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        <button type="submit">Create Jam</button>
-    </form>
-    <br>
-<h2>Current playing:</h2>
-    <p>{{ current.item.name }}</p>
+    <div class="mt-5">
+        <h3>Deine Jams</h3>
+        {% if jams %}
+        <ul class="list-group">
+            {% for jam in jams %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                {{ jam.name }}
+                <a href="/jam/{{ jam.code }}" class="btn btn-outline-secondary btn-sm">Details</a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>Du hast noch keine Jams erstellt.</p>
+        {% endif %}
+    </div>
 
-    <h1>Join an Existing Jam</h1>
-    <form method="POST" action="/join">
-        {% csrf_token %}
-        <label for="jam_code">Enter Jam Code:</label><br>
-        <input type="text" id="jam_code" name="jam_code" required><br><br>
-        <button type="submit">Join Jam</button>
-    </form>
-    <br>
-
-    <a href="/logout">Logout</a>
-</body>
-</html>
+    <div class="text-center mt-4">
+        <a href="/logout" class="btn btn-danger">Logout</a>
+    </div>
+</div>
+{% endblock %}

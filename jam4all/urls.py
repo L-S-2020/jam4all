@@ -19,9 +19,9 @@ from django.urls import path
 from main import views
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', views.start_auth_spotify, name='start_auth_spotify'),
+    path('', views.landingpage, name='landingpage'),
     path('login', views.login_spotify, name='login_spotify'),
+    path('logout', views.logout, name='logout'),
     path('callback', views.callback_spotify, name='callback_spotify'),
     path('home', views.home, name='home'),
     path('api/create_jam', views.create_jam, name='create_jam'),
@@ -29,4 +29,5 @@ urlpatterns = [
     path('join', views.join_jam, name='join_jam'),
     path('search', views.search_song, name='search_song'),
     path('api/add_queue', views.add_song_to_queue, name='add_song_to_queue'),
+    path('api/deactivate', views.deactivate_jam, name='deactivate_jam'),
 ]

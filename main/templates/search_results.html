@@ -1,28 +1,35 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Suchergebnisse</title>
-</head>
-<body>
-    <h1>Suchergebnisse</h1>
+{% extends "header.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Suchergebnisse</h1>
     {% if tracks %}
-        <ul>
-            {% for track in tracks %}
-                <li>
-                    <strong>{{ track.name }}</strong> von {% for artist in track.artists %}{{ artist.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+    <div class="row">
+        {% for track in tracks %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card shadow-sm">
+                <img src="{{ track.album.images.0.url }}" class="card-img-top" alt="Cover">
+                <div class="card-body">
+                    <h5 class="card-title">{{ track.name }}</h5>
+                    <p class="card-text">
+                        von {% for artist in track.artists %}
+                            <a href="{{ artist.external_urls.spotify }}" target="_blank">{{ artist.name }}</a>{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    </p>
+                    <a href="{{ track.external_urls.spotify }}" target="_blank" class="btn btn-outline-success btn-sm mb-2">Auf Spotify ansehen</a>
                     <form method="POST" action="/api/add_queue">
                         {% csrf_token %}
                         <input type="hidden" name="jam_code" value="{{ jam_code }}">
                         <input type="hidden" name="track_id" value="{{ track.id }}">
-                        <button type="submit">Zur Warteschlange hinzufügen</button>
+                        <button type="submit" class="btn btn-primary btn-sm">Zur Warteschlange hinzufügen</button>
                     </form>
-                </li>
-            {% endfor %}
-        </ul>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
     {% else %}
-        <p>Keine Ergebnisse gefunden.</p>
+    <p>Keine Ergebnisse gefunden.</p>
     {% endif %}
-    <a href="/home">Zurück zur Startseite</a>
-</body>
-</html>
+    <a href="/jam/{{ jam_code }}" class="btn btn-secondary mt-4">Zurück zum Jam</a>
+</div>
+{% endblock %}
